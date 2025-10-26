@@ -10,6 +10,9 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AdminComponent } from './components/admin/admin.component';
 import { PersonalComponent } from './components/personal/personal.component';
 import { AuthInterceptor } from './services/interceptor.service';
+import { BarraComponent } from './components/barra/barra.component';
+import { ReportesComponent } from './components/reportes - dashboard/reportes.component';
+import { ProductosComponent } from './components/productos/productos.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +21,9 @@ import { AuthInterceptor } from './services/interceptor.service';
     LoginComponent,
     AdminComponent,
     PersonalComponent,
+    BarraComponent,
+    ReportesComponent,
+    ProductosComponent,
   ],
   imports: [
     BrowserModule,
