@@ -13,6 +13,7 @@ import { AuthInterceptor } from './services/interceptor.service';
 import { BarraComponent } from './components/barra/barra.component';
 import { ReportesComponent } from './components/reportes - dashboard/reportes.component';
 import { ProductosComponent } from './components/productos/productos.component';
+import { UsuariosComponent } from './components/usuarios/usuarios.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { ProductosComponent } from './components/productos/productos.component';
     BarraComponent,
     ReportesComponent,
     ProductosComponent,
+    UsuariosComponent,
   ],
   imports: [
     BrowserModule,
