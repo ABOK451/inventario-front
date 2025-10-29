@@ -5,10 +5,10 @@ import { AuthService } from './services/auth.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'] // corregí styleUrl -> styleUrls
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
-  sidebarVisible = true;
+export class AppComponent {
+  sidebarCollapsed = false; // Control global del estado del sidebar
   showSidebar = true;
   tiempoRestante: number = 0;
 
@@ -40,7 +40,8 @@ export class AppComponent implements OnInit {
     }, 60000);
   }
 
-  onSidebarStateChange(visible: boolean) {
-    this.sidebarVisible = visible;
+
+  onSidebarToggled() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 }
