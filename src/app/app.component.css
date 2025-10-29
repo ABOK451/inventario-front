@@ -1,0 +1,10 @@
+.main-content {
+  transition: margin-left 0.3s ease;
+  padding: 2rem;
+  margin-left: 0;
+}
+
+/* Cuando el sidebar está visible */
+.main-content.shifted {
+  margin-left: 280px; /* Igual que el ancho de tu barra lateral */
+}
