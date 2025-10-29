@@ -42,18 +42,32 @@ guardarTiempoRestante(tiempoMin: number): void {
     localStorage.setItem('tiempo_restante_min', tiempoMin.toString());
   }
 }
-
 logoutYcerrarSesion(): void {
-  // Limpiar localStorage inmediatamente
-  this.cerrarSesion();
+  const token = this.obtenerToken();
+  console.log('[AuthService] logoutYcerrarSesion, token:', token);
 
-  const headers = this.obtenerCabecerasAutenticadas(); // aquí headers estará vacío si no hay token, y es correcto
+  if (!token) {
+    console.log('[AuthService] No hay token, cerrando sesión local');
+    this.cerrarSesion();
+    return;
+  }
 
+  const headers = this.obtenerCabecerasAutenticadas();
+  console.log('[AuthService] Llamando endpoint /logout con headers:', headers);
+
+  // Llamada HTTP sin retornar Observable
   this.http.post(`${this.apiUrl}/logout`, {}, { headers }).subscribe({
-    next: () => console.log('[AuthService] Logout en backend exitoso'),
-    error: (err) => console.error('[AuthService] Error al cerrar sesión en backend:', err)
+    next: (res) => {
+      console.log('[AuthService] /logout respuesta:', res);
+      this.cerrarSesion();
+    },
+    error: (err) => {
+      console.error('[AuthService] Error /logout:', err);
+      this.cerrarSesion();
+    }
   });
 }
+
 
 cerrarSesion(): void {
   if (typeof window !== 'undefined' && window.localStorage) {
