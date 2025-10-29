@@ -1,1 +1,10 @@
-<router-outlet></router-outlet>
+<!-- Muestra barra solo si aplica -->
+<app-barra
+  *ngIf="showSidebar"
+  (sidebarStateChange)="onSidebarStateChange($event)">
+</app-barra>
+
+<!-- Contenido principal -->
+<div class="main-content" [class.shifted]="showSidebar && sidebarVisible">
+  <router-outlet></router-outlet>
+</div>
