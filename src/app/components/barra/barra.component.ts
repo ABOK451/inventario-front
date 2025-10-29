@@ -1,5 +1,6 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-barra',
@@ -7,19 +8,19 @@ import { Router } from '@angular/router';
   styleUrls: ['./barra.component.css']
 })
 export class BarraComponent {
- @Output() sidebarStateChange = new EventEmitter<boolean>(); 
+  @Output() sidebarStateChange = new EventEmitter<boolean>();
   sidebarVisible = true;
 
-  constructor(private router: Router) {}
-
+  constructor(private router: Router, private authService: AuthService) {}
 
   toggleSidebar() {
     this.sidebarVisible = !this.sidebarVisible;
-    this.sidebarStateChange.emit(this.sidebarVisible); 
+    this.sidebarStateChange.emit(this.sidebarVisible);
   }
 
   logout() {
-    localStorage.removeItem('token');
+    this.authService.logoutYcerrarSesion();
+    localStorage.clear();
     this.router.navigate(['/login']);
   }
 }
