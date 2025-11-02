@@ -1,50 +1,50 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'] // corregido styleUrl -> styleUrls
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   sidebarVisible = true;
   showSidebar = true;
 
-  constructor(private router: Router,private authService: AuthService, ) {
+  notifVisible = false;
+  notifMensaje = '';
+  notifTipo: 'success' | 'error' = 'success'; // <-- tipo corregido
+
+  constructor(private router: Router, private authService: AuthService) {
+    // Controla el sidebar según la ruta
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        // Rutas donde NO quieres mostrar la barra
-        const noSidebarRoutes = ['/login', '/'];
+        const noSidebarRoutes = ['/login', '/recuperar', '/']; // agregamos recuperar
         this.showSidebar = !noSidebarRoutes.includes(event.url);
       }
     });
   }
 
-   onSidebarStateChange(visible: boolean) {
+  ngOnInit(): void {
+    // Notificación de sesión
+    if (typeof window !== 'undefined') {
+      const token = this.authService.obtenerToken();
+      const tiempoRestante = this.authService.obtenerTiempoRestante();
+
+      if (token && tiempoRestante > 0) {
+        this.mostrarNotificacion(`Tienes ${tiempoRestante} minutos restantes de sesión.`);
+      }
+    }
+  }
+
+  onSidebarStateChange(visible: boolean) {
     this.sidebarVisible = visible;
   }
 
-  notifVisible = false;
-notifMensaje = '';
-notifTipo = 'success';
-
-mostrarNotificacion(mensaje: string, tipo = 'success') {
-  this.notifMensaje = mensaje;
-  this.notifTipo = tipo;
-  this.notifVisible = true;
-  setTimeout(() => this.notifVisible = false, 5000);
-}
-
-ngOnInit(): void {
-  if (typeof window !== 'undefined') {
-    const token = this.authService.obtenerToken();
-    const tiempoRestante = this.authService.obtenerTiempoRestante();
-
-    if (token && tiempoRestante > 0) {
-      this.mostrarNotificacion(`Tienes ${tiempoRestante} minutos restantes de sesión.`);
-    }
+  mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success') {
+    this.notifMensaje = mensaje;
+    this.notifTipo = tipo;
+    this.notifVisible = true;
+    setTimeout(() => this.notifVisible = false, 5000);
   }
-}
-
 }

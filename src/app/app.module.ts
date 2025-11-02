@@ -22,6 +22,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { NotificacionComponent } from './components/notificacion/notificacion.component';
 import { TiempoInterceptor } from './interceptor/tiempo.interceptor';
+import { RecuperarComponent } from './components/recuperar/recuperar.component';
 
 @NgModule({
   declarations: [
@@ -35,6 +36,7 @@ import { TiempoInterceptor } from './interceptor/tiempo.interceptor';
     ProductosComponent,
     UsuariosComponent,
     NotificacionComponent,
+    RecuperarComponent,
   ],
   imports: [
     BrowserModule,
