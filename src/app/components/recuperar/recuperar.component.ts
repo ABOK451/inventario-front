@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { RecuperarService } from '../../services/recuperar.service';
 
 @Component({
@@ -18,7 +19,7 @@ export class RecuperarComponent {
   notificacionMensaje = '';
   notificacionTipo: 'success' | 'error' = 'success';
 
-  constructor(private recuperarService: RecuperarService) {}
+  constructor(private recuperarService: RecuperarService, private router: Router) {}
 
   solicitarCodigo() {
     this.recuperarService.solicitarReset(this.correo).subscribe({
@@ -36,16 +37,29 @@ export class RecuperarComponent {
   }
 
   restablecerPassword() {
+    if (!this.codigo || !this.nuevaPassword) {
+      this.mostrarNotificacion('Por favor completa todos los campos', 'error');
+      return;
+    }
+
     this.recuperarService.resetConCodigo(this.correo, this.codigo, this.nuevaPassword).subscribe({
-      next: res => {
-        this.mostrarNotificacion(res.mensaje, 'success');
+      next: (res: any) => {
+        const mensaje = res.mensaje || (res.codigo === 0 ? 'Contraseña restablecida con éxito' : 'Error desconocido');
+        const tipo: 'success' | 'error' = res.codigo === 0 ? 'success' : 'error';
+        this.mostrarNotificacion(mensaje, tipo);
+
         if (res.codigo === 0) {
-          this.codigoSolicitado = false; // Reiniciar después de éxito
+          this.codigoSolicitado = false;
           this.codigo = '';
           this.nuevaPassword = '';
+
+          setTimeout(() => this.router.navigate(['/login']), 2000);
         }
       },
-      error: err => this.mostrarNotificacion('Error al restablecer contraseña', 'error')
+      error: (err) => {
+        console.error('Error al restablecer contraseña', err);
+        this.mostrarNotificacion('Ocurrió un error en el servidor', 'error');
+      }
     });
   }
 
