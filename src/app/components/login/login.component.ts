@@ -28,25 +28,23 @@ export class LoginComponent {
 
     this.authService.login(this.correo, this.password).subscribe({
       next: (res: any) => {
-        if (res.codigo === 0) {
-          if (res.mensaje.includes('Ya existe una sesión activa')) {
-            // Guardar token y tiempo restante
-            this.authService.guardarToken(res.token);
-            this.authService.guardarTiempoRestante(res.tiempo_restante_min);
+  if (res.codigo === 0) {
+    if (res.mensaje?.includes('Ya existe una sesión activa')) {
+      this.guardarTokenYRedirigir(res.token);
+      return;
+    }
 
-            this.guardarTokenYRedirigir(res.token); // redirige directamente
-            return;
-          }
+    this.pasoCodigo = true;
+    this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
+  } else {
+    const errores = res.error?.detalle?.map((e: any) => `${e.campo}: ${e.mensaje}`).join('\n');
+    this.mostrarNotificacion(errores, 'error');
 
-          this.pasoCodigo = true;
-          this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
-        } else {
-          const errores = Array.isArray(res.error?.mensaje)
-            ? res.error.mensaje.join(', ')
-            : res.error?.mensaje;
-          this.mostrarNotificacion(errores || 'Error al iniciar sesión.', 'error');
-        }
-      },
+  }
+}
+
+
+,
       error: () => {
         this.mostrarNotificacion('Ocurrió un error en el servidor.', 'error');
       }
