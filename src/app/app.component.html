@@ -1,16 +1,19 @@
-<!-- Barra lateral global -->
+<!-- Muestra barra solo si aplica -->
 <app-barra
   *ngIf="showSidebar"
-  [sidebarCollapsed]="sidebarCollapsed"
-  (sidebarToggled)="onSidebarToggled()"
-></app-barra>
+  (sidebarStateChange)="onSidebarStateChange($event)">
+</app-barra>
 
-<!-- Contenido principal con clases condicionales -->
-<div
-  class="app-layout"
-  [class.sidebar-collapsed]="sidebarCollapsed && showSidebar"
-  [class.sidebar-expanded]="!sidebarCollapsed && showSidebar"
-  [class.no-sidebar]="!showSidebar"
->
+
+<app-notificacion
+  [visible]="notifVisible"
+  [mensaje]="notifMensaje"
+  [tipo]="notifTipo">
+</app-notificacion>
+
+<router-outlet></router-outlet>
+
+<!-- Contenido principal -->
+<div class="main-content" [class.shifted]="showSidebar && sidebarVisible">
   <router-outlet></router-outlet>
 </div>

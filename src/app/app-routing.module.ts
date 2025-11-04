@@ -10,10 +10,12 @@ import { ReportesComponent } from './components/reportes - dashboard/reportes.co
 import { ProductosComponent } from './components/productos/productos.component';
 import { UsuariosComponent } from './components/usuarios/usuarios.component';
 import { authGuard } from './guards/auth.guard';
+import { RecuperarComponent } from './components/recuperar/recuperar.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'recuperar', component: RecuperarComponent },
   { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
   { path: 'personal', component: PersonalComponent, canActivate: [authGuard] },
   { path: 'barra', component: BarraComponent, canActivate: [authGuard] },

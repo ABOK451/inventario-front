@@ -1,95 +1,137 @@
 // src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { interval, Observable, of, tap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private apiUrl = 'http://localhost:3001/auth';
+  private tokenKey = 'token';
+  private tiempoKey = 'tiempo_restante_min';
 
-  constructor(private http: HttpClient) {}
-
-    private tiempoRestanteKey = 'tiempoRestante';
-
-  login(correo: string, password: string): Observable<any> {
-    const body = { correo, password };
-    return this.http.post(`${this.apiUrl}/login`, body);
+  constructor(private http: HttpClient,private router: Router) {
+    if (this.isLocalStorageAvailable()) {
+    this.iniciarContadorSesion();
+  }
   }
 
-  verificarCodigo(correo: string, codigo: string) {
-  const body = { correo, codigo };
-  return this.http.post(`${this.apiUrl}/verificar-codigo`, body);
-}
+  // LOGIN
+  login(correo: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login`, { correo, password });
+  }
 
+  // VERIFICAR CÓDIGO
+  verificarCodigo(correo: string, codigo: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verificar-codigo`, { correo, codigo }).pipe(
+      tap((res: any) => {
+        if (res?.codigo === 0 && res?.tiempo_restante_min !== undefined) {
+          this.guardarTiempoRestante(res.tiempo_restante_min);
+          if (res?.token) {
+            this.guardarToken(res.token);
+          }
+        }
+      })
+    );
+  }
+
+  // ----------------------
+  // TOKEN
+  // ----------------------
   guardarToken(token: string): void {
-    localStorage.setItem('token', token);
+    if (this.isLocalStorageAvailable()) {
+      localStorage.setItem(this.tokenKey, token);
+    }
   }
 
   obtenerToken(): string | null {
-    return localStorage.getItem('token');
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+}
+
+  // ----------------------
+  // TIEMPO RESTANTE
+  // ----------------------
+  guardarTiempoRestante(tiempo: number): void {
+    if (this.isLocalStorageAvailable()) {
+      localStorage.setItem(this.tiempoKey, tiempo.toString());
+    }
   }
 
-  obtenerTiempoRestante(): number {
-  if (typeof window === 'undefined' || !window.localStorage) return 0;
+
+
+obtenerTiempoRestante(): number {
+  if (typeof window === 'undefined') return 0;
   const t = localStorage.getItem('tiempo_restante_min');
   return t ? parseInt(t, 10) : 0;
 }
 
-guardarTiempoRestante(tiempoMin: number): void {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    localStorage.setItem('tiempo_restante_min', tiempoMin.toString());
-  }
-}
-logoutYcerrarSesion(): void {
-  const token = this.obtenerToken();
-  console.log('[AuthService] logoutYcerrarSesion, token:', token);
 
-  if (!token) {
-    console.log('[AuthService] No hay token, cerrando sesión local');
-    this.cerrarSesion();
-    return;
+  decrementarTiempoRestante(): void {
+    const tiempo = this.obtenerTiempoRestante();
+    if (tiempo > 0) this.guardarTiempoRestante(tiempo - 1);
   }
 
-  const headers = this.obtenerCabecerasAutenticadas();
-  console.log('[AuthService] Llamando endpoint /logout con headers:', headers);
-
-  // Llamada HTTP sin retornar Observable
-  this.http.post(`${this.apiUrl}/logout`, {}, { headers }).subscribe({
-    next: (res) => {
-      console.log('[AuthService] /logout respuesta:', res);
-      this.cerrarSesion();
-    },
-    error: (err) => {
-      console.error('[AuthService] Error /logout:', err);
-      this.cerrarSesion();
+  // ----------------------
+  // LOGOUT
+  // ----------------------
+  logout(): Observable<any> {
+    const token = this.obtenerToken();
+    if (!token) {
+      this.cerrarSesionLocal();
+      return of({ mensaje: "No había token", codigo: 2 });
     }
-  });
-}
 
+    const headers = this.obtenerCabecerasAutenticadas();
+    return this.http.post(`${this.apiUrl}/logout`, {}, { headers }).pipe(
+      tap({
+        next: () => this.cerrarSesionLocal(),
+        error: () => this.cerrarSesionLocal()
+      })
+    );
+  }
 
-cerrarSesion(): void {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('tiempo_restante_min');
+  cerrarSesionLocal(): void {
+    if (!this.isLocalStorageAvailable()) return;
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.tiempoKey);
   }
 }
 
 
   obtenerCabecerasAutenticadas(): HttpHeaders {
-    const token = this.obtenerToken();
     return new HttpHeaders({
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${this.obtenerToken() || ''}`
     });
   }
 
-
-
-  decrementarTiempoRestante(): void {
+  private isLocalStorageAvailable(): boolean {
+    return typeof window !== 'undefined' && !!window.localStorage;
+  }
+  private iniciarContadorSesion() {
+  interval(60000).subscribe(() => {
     const tiempo = this.obtenerTiempoRestante();
+
     if (tiempo > 0) {
       this.guardarTiempoRestante(tiempo - 1);
+    } else if (tiempo === 0 && this.obtenerToken()) {
+      console.log('[AuthService] Sesión expirada, cerrando...');
+
+      this.logout().subscribe({
+        next: () => {
+          console.log('[AuthService] Logout ejecutado');
+          this.router.navigate(['/login']);  // ✅ Redirigir
+        },
+        error: (err) => {
+          console.error('[AuthService] Error en logout:', err);
+          this.router.navigate(['/login']);  // ✅ Redirigir aunque falle
+        }
+      });
     }
-  }
+  });
+}
+
+
 }

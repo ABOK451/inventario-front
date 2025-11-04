@@ -1,4 +1,10 @@
-<!-- login.component.html -->
+<app-notificacion
+  [visible]="notificacionVisible"
+  [mensaje]="notificacionMensaje"
+  [tipo]="notificacionTipo">
+</app-notificacion>
+
+
 <div class="login-container">
 <div class="login-card">
 <div class="logo">🍕</div>
@@ -31,7 +37,6 @@
     <button type="submit" [disabled]="!codigoForm.valid">Verificar</button>
   </form>
 
-  <p *ngIf="mensaje">{{ mensaje }}</p>
 </div>
 
 
