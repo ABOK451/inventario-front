@@ -8,8 +8,9 @@ import { AuthService } from './services/auth.service';
   styleUrls: ['./app.component.css'] // corregido styleUrl -> styleUrls
 })
 export class AppComponent implements OnInit {
-  sidebarVisible = true;
+  sidebarCollapsed = false; // Control global del estado del sidebar
   showSidebar = true;
+
 
   notifVisible = false;
   notifMensaje = '';
@@ -37,9 +38,10 @@ export class AppComponent implements OnInit {
     }
   }
 
-  onSidebarStateChange(visible: boolean) {
-    this.sidebarVisible = visible;
-  }
+  onSidebarToggled() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
 
   mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success') {
     this.notifMensaje = mensaje;

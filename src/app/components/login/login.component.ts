@@ -37,12 +37,13 @@ export class LoginComponent {
     this.pasoCodigo = true;
     this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
   } else {
-    const errores = res.error?.detalle?.map((e: any) => `${e.campo}: ${e.mensaje}`).join('\n');
-    this.mostrarNotificacion(errores, 'error');
+    // Extraer solo los mensajes de error
+    const errores = res.error?.detalle?.map((e: any) => e.mensaje) || [res.error?.mensaje || 'Error al iniciar sesión.'];
 
+    // Mostrar cada mensaje por separado en la notificación
+    this.mostrarNotificacion(errores.join('\n'), 'error');
   }
 }
-
 
 ,
       error: () => {
