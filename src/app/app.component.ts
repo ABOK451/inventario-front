@@ -25,24 +25,6 @@ export class AppComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    // Obtener tiempo inicial
-    this.tiempoRestante = this.auth.obtenerTiempoRestante();
-
-    // Reducir cada minuto
-    setInterval(() => {
-      this.auth.decrementarTiempoRestante();
-      this.tiempoRestante = this.auth.obtenerTiempoRestante();
-
-      // Opcional: cerrar sesión si tiempo llega a 0
-      if (this.tiempoRestante <= 0) {
-        this.auth.cerrarSesion();
-        // Redirigir al login
-        this.router.navigate(['/login']);
-      }
-    }, 60000);
-  }
-
 
   ngOnInit(): void {
     // Notificación de sesión
