@@ -22,6 +22,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NotificacionComponent } from './components/notificacion/notificacion.component';
 import { TiempoInterceptor } from './interceptor/tiempo.interceptor';
 import { RecuperarComponent } from './components/recuperar/recuperar.component';
+import { BitacoraComponent } from './components/bitacora/bitacora.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { RecuperarComponent } from './components/recuperar/recuperar.component';
     ProductosComponent,
     UsuariosComponent,
     NotificacionComponent,
-    RecuperarComponent
+    RecuperarComponent,
+    BitacoraComponent
   ],
   imports: [
     BrowserModule,
