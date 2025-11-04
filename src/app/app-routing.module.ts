@@ -19,7 +19,7 @@ const routes: Routes = [
   { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
   { path: 'personal', component: PersonalComponent, canActivate: [authGuard] },
   { path: 'barra', component: BarraComponent, canActivate: [authGuard] },
-  { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
+  { path: 'reportes', component: ReportesComponent },
   { path: 'productos', component: ProductosComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] }
 ];

@@ -98,8 +98,6 @@ obtenerTiempoRestante(): number {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.tiempoKey);
   }
-}
-
 
   obtenerCabecerasAutenticadas(): HttpHeaders {
     return new HttpHeaders({
