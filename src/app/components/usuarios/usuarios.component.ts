@@ -2,6 +2,26 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UsuarioService } from '../../services/usuario.service';
 
+interface Usuario {
+  id: number;
+  nombre: string;
+  app: string;
+  apm: string;
+  correo: string;
+  telefono: string;
+  rol: 'admin' | 'user';
+  estado: string;
+}
+
+interface ListarUsuariosResponse {
+  mensaje: string;
+  codigo: number;
+  token: string | null;
+  tiempo_restante_min: number;
+  usuarios: Usuario[];
+}
+
+
 @Component({
   selector: 'app-usuarios',
   templateUrl: './usuarios.component.html',
@@ -68,19 +88,22 @@ mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success') {
 }
 
 
-  // Listar usuarios
-  listarUsuarios() {
-    this.usuarioService.listarUsuarios().subscribe({
-      next: (res: any) => {
-        if (res.codigo === 0) {
-          this.usuarios = res.usuarios;
-        } else {
-          this.mostrarNotificacion(res.error?.mensaje || 'Error al listar usuarios', 'error');
-        }
-      },
-      error: () => this.mostrarNotificacion('Error al conectar con el servidor', 'error')
-    });
-  }
+
+    listarUsuarios() {
+  this.usuarioService.listarUsuarios().subscribe({
+    next: (res: ListarUsuariosResponse) => {
+      if (res.codigo === 0) {
+        // Filtrar solo los usuarios de rol 'user'
+        this.usuarios = res.usuarios.filter((u: Usuario) => u.rol === 'user');
+      } else {
+        // Usar el mensaje que sí existe en la respuesta
+        this.mostrarNotificacion(res.mensaje || 'Error al listar usuarios', 'error');
+      }
+    },
+    error: () => this.mostrarNotificacion('Error al conectar con el servidor', 'error')
+  });
+}
+
 
   // Crear usuario
   crear() {
@@ -163,7 +186,7 @@ mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success') {
 
   // Eliminar usuario
   eliminar(usuario: any) {
-    this.usuarioService.eliminarUsuario({ id: usuario.id }).subscribe({
+    this.usuarioService.eliminarUsuario({ correo: usuario.correo }).subscribe({
       next: () => {
         this.listarUsuarios();
         this.mostrarNotificacion('Usuario eliminado', 'success');
