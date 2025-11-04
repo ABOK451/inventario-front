@@ -64,6 +64,43 @@ export class BitacoraComponent {
     }, 5000);
   }
 
+  // Método mejorado para extraer el mensaje de error
+  private extraerMensajeError(res: any): string {
+    if (res?.error) {
+      const mensajes: string[] = [];
+
+      // Si hay lista de errores de validación
+      if (Array.isArray(res.error.detalle)) {
+        const detalleMensajes = res.error.detalle.map(
+          (e: any) => `${e.campo}: ${e.mensaje}`
+        );
+        mensajes.push(...detalleMensajes);
+      }
+
+      // Solo agregar mensaje general si NO hay detalles
+      // (evita duplicados como "Errores de validación")
+      if (res.error.mensaje && mensajes.length === 0) {
+        mensajes.push(res.error.mensaje);
+      }
+
+      if (mensajes.length > 0) {
+        // Usar <br> para saltos de línea en HTML
+        return mensajes.join('<br>');
+      }
+    }
+
+    // En caso de mensaje directo o estructura diferente
+    if (res.mensaje) {
+      return res.mensaje;
+    }
+
+    if (res.error?.mensaje) {
+      return res.error.mensaje;
+    }
+
+    return 'Error en la operación';
+  }
+
   // Listar todos los movimientos
   listarTodos(): void {
     this.bitacoraService.listarMovimientos().subscribe({
@@ -93,9 +130,12 @@ export class BitacoraComponent {
 
   // Crear nuevo movimiento
   crear(): void {
-    if (this.crearForm.invalid) {
+    if (
+      !this.crearForm.get('id_producto')?.value ||
+      !this.crearForm.get('tipo_movimiento')?.value
+    ) {
       this.mostrarNotificacion(
-        'Por favor complete todos los campos requeridos correctamente',
+        'Por favor complete todos los campos obligatorios',
         'error'
       );
       return;
@@ -105,8 +145,8 @@ export class BitacoraComponent {
 
     this.bitacoraService.crearMovimiento(movimiento).subscribe({
       next: (res: any) => {
-        // Verificar código de respuesta
         if (res.codigo === 0) {
+          // ✅ Éxito
           this.mostrarNotificacion(
             res.mensaje || 'Movimiento registrado exitosamente',
             'success'
@@ -119,26 +159,15 @@ export class BitacoraComponent {
           });
           this.crearCollapsed = true;
         } else {
-          // Manejar errores del backend
-          let mensajeError = res.mensaje || 'Error al registrar movimiento';
-
-          // Si hay errores de validación específicos
-          if (res.errores && Array.isArray(res.errores)) {
-            const errores = res.errores
-              .map((e: any) => e.mensaje || e.campo)
-              .join('\n');
-            mensajeError = errores;
-          }
-
+          // ❌ Error de validación, duplicado, etc.
+          const mensajeError = this.extraerMensajeError(res);
           this.mostrarNotificacion(mensajeError, 'error');
         }
       },
       error: (err) => {
-        console.error('Error al crear movimiento:', err);
-        this.mostrarNotificacion(
-          'Error de conexión al registrar movimiento',
-          'error'
-        );
+        // 🔥 Solo entra aquí si hay fallo de red o no responde el servidor
+        console.error('Error de conexión o backend caído:', err);
+        this.mostrarNotificacion('Error de conexión con el servidor', 'error');
       },
     });
   }
@@ -182,15 +211,7 @@ export class BitacoraComponent {
           this.listarTodos();
           this.cerrarModal();
         } else {
-          let mensajeError = res.mensaje || 'Error al actualizar movimiento';
-
-          if (res.errores && Array.isArray(res.errores)) {
-            const errores = res.errores
-              .map((e: any) => e.mensaje || e.campo)
-              .join('\n');
-            mensajeError = errores;
-          }
-
+          const mensajeError = this.extraerMensajeError(res);
           this.mostrarNotificacion(mensajeError, 'error');
         }
       },
@@ -223,10 +244,8 @@ export class BitacoraComponent {
           );
           this.listarTodos();
         } else {
-          this.mostrarNotificacion(
-            res.mensaje || 'Error al eliminar movimiento',
-            'error'
-          );
+          const mensajeError = this.extraerMensajeError(res);
+          this.mostrarNotificacion(mensajeError, 'error');
         }
       },
       error: (err) => {
