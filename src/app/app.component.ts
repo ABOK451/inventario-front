@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -9,8 +10,9 @@ import { NavigationEnd, Router } from '@angular/router';
 export class AppComponent {
   sidebarCollapsed = false; // Control global del estado del sidebar
   showSidebar = true;
+  tiempoRestante: number = 0;
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private auth: AuthService) {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         // Rutas donde NO quieres mostrar la barra
@@ -19,6 +21,25 @@ export class AppComponent {
       }
     });
   }
+
+  ngOnInit(): void {
+    // Obtener tiempo inicial
+    this.tiempoRestante = this.auth.obtenerTiempoRestante();
+
+    // Reducir cada minuto
+    setInterval(() => {
+      this.auth.decrementarTiempoRestante();
+      this.tiempoRestante = this.auth.obtenerTiempoRestante();
+
+      // Opcional: cerrar sesión si tiempo llega a 0
+      if (this.tiempoRestante <= 0) {
+        this.auth.cerrarSesion();
+        // Redirigir al login
+        this.router.navigate(['/login']);
+      }
+    }, 60000);
+  }
+
 
   onSidebarToggled() {
     this.sidebarCollapsed = !this.sidebarCollapsed;

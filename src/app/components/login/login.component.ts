@@ -28,10 +28,15 @@ export class LoginComponent {
 
         if (res.codigo === 0) {
           if (res.mensaje.includes('Ya existe una sesión activa')) {
-            this.guardarTokenYRedirigir(res.token);
+            // Guardar token y tiempo restante
+            this.authService.guardarToken(res.token);
+            this.authService.guardarTiempoRestante(res.tiempo_restante_min);
+
+            this.guardarTokenYRedirigir(res.token); // redirige directamente
             return;
           }
 
+          // Caso normal: enviar código de verificación
           this.mensaje = 'Código de verificación enviado a tu correo.';
           this.pasoCodigo = true;
         } else {
@@ -56,6 +61,8 @@ export class LoginComponent {
         console.log('[LoginComponent] Respuesta verificación:', res);
 
         if (res.codigo === 0) {
+          this.authService.guardarToken(res.token);
+          this.authService.guardarTiempoRestante(res.tiempo_restante_min);
           this.guardarTokenYRedirigir(res.token);
         } else {
           this.mensaje = res.error?.mensaje || 'Código incorrecto.';
@@ -69,8 +76,6 @@ export class LoginComponent {
   }
 
   private guardarTokenYRedirigir(token: string) {
-    localStorage.setItem('token', token);
-
     const payloadBase64 = token.split('.')[1];
     const payloadJson = atob(payloadBase64);
     const payload = JSON.parse(payloadJson);
