@@ -28,21 +28,23 @@ export class LoginComponent {
 
     this.authService.login(this.correo, this.password).subscribe({
       next: (res: any) => {
-        if (res.codigo === 0) {
-          if (res.mensaje.includes('Ya existe una sesión activa')) {
-            this.guardarTokenYRedirigir(res.token);
-            return;
-          }
+  if (res.codigo === 0) {
+    if (res.mensaje?.includes('Ya existe una sesión activa')) {
+      this.guardarTokenYRedirigir(res.token);
+      return;
+    }
 
-          this.pasoCodigo = true;
-          this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
-        } else {
-          const errores = Array.isArray(res.error?.mensaje)
-            ? res.error.mensaje.join(', ')
-            : res.error?.mensaje;
-          this.mostrarNotificacion(errores || 'Error al iniciar sesión.', 'error');
-        }
-      },
+    this.pasoCodigo = true;
+    this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
+  } else {
+    const errores = res.error?.detalle?.map((e: any) => `${e.campo}: ${e.mensaje}`).join('\n');
+    this.mostrarNotificacion(errores, 'error');
+
+  }
+}
+
+
+,
       error: () => {
         this.mostrarNotificacion('Ocurrió un error en el servidor.', 'error');
       }
