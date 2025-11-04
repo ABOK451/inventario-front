@@ -18,6 +18,10 @@ import { ReportesComponent } from './components/reportes - dashboard/reportes.co
 import { ProductosComponent } from './components/productos/productos.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { UsuariosComponent } from './components/usuarios/usuarios.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NotificacionComponent } from './components/notificacion/notificacion.component';
+import { TiempoInterceptor } from './interceptor/tiempo.interceptor';
+import { RecuperarComponent } from './components/recuperar/recuperar.component';
 
 @NgModule({
   declarations: [
@@ -30,25 +34,24 @@ import { UsuariosComponent } from './components/usuarios/usuarios.component';
     ReportesComponent,
     ProductosComponent,
     UsuariosComponent,
+    NotificacionComponent,
+    RecuperarComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    HttpClientModule,
     ReactiveFormsModule,
-    NgChartsModule
+    HttpClientModule,
+    NgChartsModule,
+    BrowserAnimationsModule
   ],
   providers: [
     provideClientHydration(),
     provideHttpClient(withFetch()),
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    provideAnimationsAsync(),
-    HttpClientModule,
-    NgChartsModule,
-    RouterModule,
-    NgChartsModule,
-    ReactiveFormsModule
+    { provide: HTTP_INTERCEPTORS, useClass: TiempoInterceptor, multi: true },
+    provideAnimationsAsync()
   ],
   bootstrap: [AppComponent]
 })
