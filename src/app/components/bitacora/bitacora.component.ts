@@ -16,6 +16,11 @@ export class BitacoraComponent {
   crearCollapsed = true;
   movimientoEnEdicion: Movimiento | null = null;
 
+  // Propiedades para notificaciones
+  notifVisible = false;
+  notifMensaje = '';
+  notifTipo: 'success' | 'error' = 'success';
+
   constructor(
     private readonly bitacoraService: BitacoraService,
     private readonly fb: FormBuilder
@@ -44,6 +49,21 @@ export class BitacoraComponent {
     });
   }
 
+  // Método para mostrar notificaciones
+  mostrarNotificacion(
+    mensaje: string,
+    tipo: 'success' | 'error' = 'success'
+  ): void {
+    this.notifMensaje = mensaje;
+    this.notifTipo = tipo;
+    this.notifVisible = true;
+
+    // Ocultar automáticamente después de 5 segundos
+    setTimeout(() => {
+      this.notifVisible = false;
+    }, 5000);
+  }
+
   // Listar todos los movimientos
   listarTodos(): void {
     this.bitacoraService.listarMovimientos().subscribe({
@@ -63,7 +83,10 @@ export class BitacoraComponent {
       },
       error: (err) => {
         console.error('Error al cargar movimientos:', err);
-        alert('Error de conexión al cargar la bitácora');
+        this.mostrarNotificacion(
+          'Error de conexión al cargar la bitácora',
+          'error'
+        );
       },
     });
   }
@@ -71,7 +94,10 @@ export class BitacoraComponent {
   // Crear nuevo movimiento
   crear(): void {
     if (this.crearForm.invalid) {
-      alert('Por favor complete todos los campos requeridos correctamente');
+      this.mostrarNotificacion(
+        'Por favor complete todos los campos requeridos correctamente',
+        'error'
+      );
       return;
     }
 
@@ -79,8 +105,12 @@ export class BitacoraComponent {
 
     this.bitacoraService.crearMovimiento(movimiento).subscribe({
       next: (res: any) => {
-        alert(res.mensaje || 'Movimiento registrado exitosamente');
-        if (res.codigo === 0 || res.data) {
+        // Verificar código de respuesta
+        if (res.codigo === 0) {
+          this.mostrarNotificacion(
+            res.mensaje || 'Movimiento registrado exitosamente',
+            'success'
+          );
           this.listarTodos();
           this.crearForm.reset({
             tipo_movimiento: 'entrada',
@@ -88,11 +118,27 @@ export class BitacoraComponent {
             descripcion: '',
           });
           this.crearCollapsed = true;
+        } else {
+          // Manejar errores del backend
+          let mensajeError = res.mensaje || 'Error al registrar movimiento';
+
+          // Si hay errores de validación específicos
+          if (res.errores && Array.isArray(res.errores)) {
+            const errores = res.errores
+              .map((e: any) => e.mensaje || e.campo)
+              .join('\n');
+            mensajeError = errores;
+          }
+
+          this.mostrarNotificacion(mensajeError, 'error');
         }
       },
       error: (err) => {
         console.error('Error al crear movimiento:', err);
-        alert('Error de conexión al registrar movimiento');
+        this.mostrarNotificacion(
+          'Error de conexión al registrar movimiento',
+          'error'
+        );
       },
     });
   }
@@ -108,35 +154,55 @@ export class BitacoraComponent {
   }
 
   // Guardar cambios de edición
-guardarCambios(): void {
-  if (this.editarForm.invalid || !this.movimientoEnEdicion) {
-    alert('Por favor complete todos los campos requeridos');
-    return;
+  guardarCambios(): void {
+    if (this.editarForm.invalid || !this.movimientoEnEdicion) {
+      this.mostrarNotificacion(
+        'Por favor complete todos los campos requeridos',
+        'error'
+      );
+      return;
+    }
+
+    const movimientoActualizado = {
+      id: this.movimientoEnEdicion.id!,
+      ...this.editarForm.value,
+    };
+
+    console.log('📤 Enviando al backend:', movimientoActualizado);
+
+    this.bitacoraService.actualizarMovimiento(movimientoActualizado).subscribe({
+      next: (res: any) => {
+        console.log('📥 Respuesta del servidor:', res);
+
+        if (res.codigo === 0) {
+          this.mostrarNotificacion(
+            res.mensaje || 'Movimiento actualizado exitosamente',
+            'success'
+          );
+          this.listarTodos();
+          this.cerrarModal();
+        } else {
+          let mensajeError = res.mensaje || 'Error al actualizar movimiento';
+
+          if (res.errores && Array.isArray(res.errores)) {
+            const errores = res.errores
+              .map((e: any) => e.mensaje || e.campo)
+              .join('\n');
+            mensajeError = errores;
+          }
+
+          this.mostrarNotificacion(mensajeError, 'error');
+        }
+      },
+      error: (err) => {
+        console.error('❌ Error al actualizar movimiento:', err);
+        this.mostrarNotificacion(
+          'Error de conexión al actualizar movimiento',
+          'error'
+        );
+      },
+    });
   }
-
-  const movimientoActualizado = {
-    id: this.movimientoEnEdicion.id!,
-    ...this.editarForm.value,
-  };
-
-  console.log('📤 Enviando al backend:', movimientoActualizado); // 👈 Log del cuerpo enviado
-
-  this.bitacoraService.actualizarMovimiento(movimientoActualizado).subscribe({
-    next: (res: any) => {
-      console.log('📥 Respuesta del servidor:', res); // 👈 Log de la respuesta completa
-      alert(res.mensaje || 'Movimiento actualizado exitosamente');
-      if (res.codigo === 0 || res.data) {
-        this.listarTodos();
-        this.cerrarModal();
-      }
-    },
-    error: (err) => {
-      console.error('❌ Error al actualizar movimiento:', err);
-      alert('Error de conexión al actualizar movimiento');
-    },
-  });
-}
-
 
   // Eliminar movimiento
   eliminar(movimiento: Movimiento): void {
@@ -150,12 +216,25 @@ guardarCambios(): void {
 
     this.bitacoraService.eliminarMovimiento(movimiento.id!).subscribe({
       next: (res: any) => {
-        alert(res.mensaje || 'Movimiento eliminado exitosamente');
-        this.listarTodos();
+        if (res.codigo === 0) {
+          this.mostrarNotificacion(
+            res.mensaje || 'Movimiento eliminado exitosamente',
+            'success'
+          );
+          this.listarTodos();
+        } else {
+          this.mostrarNotificacion(
+            res.mensaje || 'Error al eliminar movimiento',
+            'error'
+          );
+        }
       },
       error: (err) => {
         console.error('Error al eliminar movimiento:', err);
-        alert('Error de conexión al eliminar movimiento');
+        this.mostrarNotificacion(
+          'Error de conexión al eliminar movimiento',
+          'error'
+        );
       },
     });
   }
@@ -165,5 +244,4 @@ guardarCambios(): void {
     this.movimientoEnEdicion = null;
     this.editarForm.reset();
   }
-
 }
