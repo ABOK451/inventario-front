@@ -22,7 +22,7 @@ export interface Producto {
 })
 export class ProductosService {
 
-  private apiUrl = 'https://appwebpro-backend.onrender.com/';
+  private apiUrl = 'https://appwebpro-backend.onrender.com';
 
   constructor(private http: HttpClient) {}
 

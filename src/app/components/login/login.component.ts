@@ -53,34 +53,43 @@ export class LoginComponent {
   }
 
   onVerificarCodigo() {
-    if (!this.codigo) {
-      this.mostrarNotificacion('Por favor ingresa el código de verificación.', 'error');
-      return;
-    }
-
-    this.authService.verificarCodigo(this.correo, this.codigo).subscribe({
-      next: (res: any) => {
-        if (res.codigo === 0) {
-          this.guardarTokenYRedirigir(res.token);
-
-          if (res.tiempo_restante_min !== undefined) {
-            this.mostrarNotificacion(
-              `Autenticación exitosa. Te quedan ${res.tiempo_restante_min} minutos de sesión.`,
-              'success'
-            );
-          }
-        } else {
-          const errores = Array.isArray(res.error?.mensaje)
-            ? res.error.mensaje.join(', ')
-            : res.error?.mensaje;
-          this.mostrarNotificacion(errores || 'Código incorrecto.', 'error');
-        }
-      },
-      error: () => {
-        this.mostrarNotificacion('Ocurrió un error en el servidor.', 'error');
-      }
-    });
+  if (!this.codigo) {
+    this.mostrarNotificacion('Por favor ingresa el código de verificación.', 'error');
+    return;
   }
+
+  this.authService.verificarCodigo(this.correo, this.codigo).subscribe({
+    next: (res: any) => {
+      console.log('Respuesta verificarCodigo:', res); // Para depurar
+
+      if (res.codigo === 0) {
+        if (!res.token) {
+          this.mostrarNotificacion('No se recibió token del backend', 'error');
+          return;
+        }
+
+        this.guardarTokenYRedirigir(res.token);
+
+        if (res.tiempo_restante_min !== undefined) {
+          this.mostrarNotificacion(
+            `Autenticación exitosa. Te quedan ${res.tiempo_restante_min} minutos de sesión.`,
+            'success'
+          );
+        }
+      } else {
+        const errores = Array.isArray(res.error?.mensaje)
+          ? res.error.mensaje.join(', ')
+          : res.error?.mensaje;
+        this.mostrarNotificacion(errores || 'Código incorrecto.', 'error');
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      this.mostrarNotificacion('Ocurrió un error en el servidor.', 'error');
+    }
+  });
+}
+
 
   private guardarTokenYRedirigir(token: string) {
     localStorage.setItem('token', token);
@@ -102,5 +111,9 @@ export class LoginComponent {
     this.notificacionTipo = tipo;
     this.notificacionVisible = true;
     this.otp = otp; // Guardar OTP para el componente
+    // Si es OTP offline, avanzar automáticamente al paso de verificación
+  if (otp) {
+    this.pasoCodigo = true;
+  }
   }
 }

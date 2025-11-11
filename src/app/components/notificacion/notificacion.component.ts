@@ -45,9 +45,13 @@ export class NotificacionComponent implements OnChanges {
   }
 
   copiarOTP() {
-    if (!this.otp) return;
-    navigator.clipboard.writeText(this.otp).then(() => {
-      alert(`Código OTP copiado: ${this.otp}`);
-    });
-  }
+  if (!this.otp) return;
+
+  navigator.clipboard.writeText(this.otp).then(() => {
+    alert(`Código OTP copiado: ${this.otp}`);
+    // Ocultar la notificación al copiar
+    this.visible = false;
+  });
+}
+
 }
