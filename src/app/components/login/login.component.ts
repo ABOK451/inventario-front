@@ -12,6 +12,7 @@ export class LoginComponent {
   password: string = '';
   codigo: string = '';
   pasoCodigo: boolean = false;
+  otp?: string; // Agregado para manejar OTP offline
 
   // Propiedades de notificación
   notificacionVisible = false;
@@ -28,24 +29,23 @@ export class LoginComponent {
 
     this.authService.login(this.correo, this.password).subscribe({
       next: (res: any) => {
-  if (res.codigo === 0) {
-    if (res.mensaje?.includes('Ya existe una sesión activa')) {
-      this.guardarTokenYRedirigir(res.token);
-      return;
-    }
-
-    this.pasoCodigo = true;
-    this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
-  } else {
-    // Extraer solo los mensajes de error
-    const errores = res.error?.detalle?.map((e: any) => e.mensaje) || [res.error?.mensaje || 'Error al iniciar sesión.'];
-
-    // Mostrar cada mensaje por separado en la notificación
-    this.mostrarNotificacion(errores.join('\n'), 'error');
-  }
-}
-
-,
+        if (res.codigo === 0) {
+          if (res.otp) {
+            // OTP generado en modo offline
+            this.mostrarNotificacion(res.mensaje, 'success', res.otp);
+          } else if (res.mensaje?.includes('Ya existe una sesión activa')) {
+            this.guardarTokenYRedirigir(res.token);
+            return;
+          } else {
+            this.pasoCodigo = true;
+            this.mostrarNotificacion('Código de verificación enviado a tu correo.', 'success');
+          }
+        } else {
+          // Extraer solo los mensajes de error
+          const errores = res.error?.detalle?.map((e: any) => e.mensaje) || [res.error?.mensaje || 'Error al iniciar sesión.'];
+          this.mostrarNotificacion(errores.join('\n'), 'error');
+        }
+      },
       error: () => {
         this.mostrarNotificacion('Ocurrió un error en el servidor.', 'error');
       }
@@ -96,11 +96,11 @@ export class LoginComponent {
     else this.router.navigate(['/personal']);
   }
 
-  mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success') {
+  // Versión actualizada de mostrarNotificacion que acepta OTP
+  mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' = 'success', otp?: string) {
     this.notificacionMensaje = mensaje;
     this.notificacionTipo = tipo;
     this.notificacionVisible = true;
-
-    setTimeout(() => this.notificacionVisible = false, 5000);
+    this.otp = otp; // Guardar OTP para el componente
   }
 }
